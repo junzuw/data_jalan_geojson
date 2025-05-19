@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kondisi Jalan Provinsi</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background-color: #f9f9f9; }
+    .sticky-wrapper { position: sticky; top: 0; z-index: 1000; }
+    header {
+      background-color: #0d47a1; color: white; padding: 16px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .map-card {
+      background-color: white; border-radius: 0 0 20px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 10px;
+    }
+    .map-title { font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #333; }
+    #map { height: 300px; border-radius: 12px; }
+    .container { padding: 10px; }
+    .card-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;
+    }
+    .card {
+      background-color: white; border-radius: 20px; padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); text-align: center; font-size: 14px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; transition: background-color 0.2s;
+    }
+    .card:hover { background-color: #e3f2fd; }
+    .card i { font-size: 24px; color: #0d47a1; }
+    .card span { font-size: 12px; color: #666; }
+  </style>
+</head>
+<body>
+
+<div class="sticky-wrapper">
+  <header><i class="fas fa-road"></i><span>Kondisi Jalan Provinsi</span></header>
+  <div class="map-card">
+    <div class="map-title">Peta Interaktif Kondisi Jalan Provinsi</div>
+    <div id="map"></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card-grid">
+    <div class="card" onclick="updateMap('baik')"><i class="fas fa-check-circle"></i><div>Jalan Baik</div><span>1.234 Km</span></div>
+    <div class="card" onclick="updateMap('sedang')"><i class="fas fa-adjust"></i><div>Jalan Sedang</div><span>987 Km</span></div>
+    <div class="card" onclick="updateMap('rusak-ringan')"><i class="fas fa-exclamation-triangle"></i><div>Jalan Rusak Ringan</div><span>456 Km</span></div>
+    <div class="card" onclick="updateMap('rusak-berat')"><i class="fas fa-times-circle"></i><div>Jalan Rusak Berat</div><span>321 Km</span></div>
+    <div class="card" onclick="updateMap('non-mantap')"><i class="fas fa-minus-circle"></i><div>Jalan Non Mantap</div><span>789 Km</span></div>
+    <div class="card" onclick="updateMap('mantap')"><i class="fas fa-check-double"></i><div>Jalan Mantap</div><span>2.345 Km</span></div>
+    <div class="card" onclick="updateMap('nasional')"><i class="fas fa-globe"></i><div>Jalan Nasional</div><span>1.745,92 Km</span></div>
+    <div class="card" onclick="updateMap('provinsi')"><i class="fas fa-map-marker-alt"></i><div>Jalan Provinsi</div><span>2.014,23 Km</span></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  let map = L.map('map').setView([-4.0, 120.2], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  let currentLayer = null;
+
+  function loadGeoJSON(url, options) {
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (currentLayer) map.removeLayer(currentLayer);
+        currentLayer = L.geoJSON(data, options).addTo(map);
+        try {
+          map.fitBounds(currentLayer.getBounds());
+        } catch (e) {
+          console.log("fitBounds gagal:", e);
+        }
+      })
+      .catch(err => console.error("Gagal memuat:", url, err));
+  }
+
+  function updateMap(type) {
+    const base = "https://raw.githubusercontent.com/junzuw/data_jalan_geojson/main/";
+
+    map.closePopup();
+    if (currentLayer) map.removeLayer(currentLayer); // reset layer peta
+
+    if (type === 'rusak-berat') {
+      loadGeoJSON(base + "center_berat.geojson", {
+        pointToLayer: (f, latlng) => L.marker(latlng, {
+          icon: L.icon({
+            iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            iconSize: [32, 32]
+          })
+        }),
+        onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Rusak Berat")
+      });
+    } else if (type === 'rusak-ringan') {
+      loadGeoJSON(base + "center_ringan.geojson", {
+        pointToLayer: (f, latlng) => L.marker(latlng, {
+          icon: L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png', iconSize: [32, 32] })
+        }),
+        onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Rusak Ringan")
+      });
+    } else if (type === 'sedang') {
+      loadGeoJSON(base + "center_sedang.geojson", {
+        pointToLayer: (f, latlng) => L.marker(latlng, {
+          icon: L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/ltblue-dot.png', iconSize: [32, 32] })
+        }),
+        onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Jalan Sedang")
+      });
+    } else if (type === 'baik') {
+      loadGeoJSON(base + "jalan_provinsi.geojson", {
+        style: () => ({ color: 'green', weight: 4 }),
+        onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Jalan Baik")
+      });
+    } else if (type === 'provinsi') {
+      loadGeoJSON(base + "jalan_provinsi.geojson", {
+        style: () => ({ color: 'magenta', weight: 4 }),
+        onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Jalan Provinsi")
+      });
+    } else if (type === 'nasional') {
+      loadGeoJSON(base + "jalan_nasional_sulsel.geojson", {
+        style: () => ({ color: 'blue', weight: 4 }),
+        onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Jalan Nasional")
+      });
+    } else if (type === 'mantap') {
+      const popup = L.popup({ closeButton: false, autoClose: true })
+        .setLatLng([-4.2, 119.6])
+        .setContent('<div style="font-weight:bold; font-size:14px;">Jalan Mantap</div><div>2.345 Km</div>')
+        .openOn(map);
+    } else if (type === 'non-mantap') {
+      const popup = L.popup({ closeButton: false, autoClose: true })
+        .setLatLng([-4.5, 120.1])
+        .setContent('<div style="font-weight:bold; font-size:14px;">Jalan Non Mantap</div><div>789 Km</div>')
+        .openOn(map);
+    }
+  }
+</script>
+</body>
+</html>
