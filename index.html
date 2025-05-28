@@ -111,12 +111,12 @@
         onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Jalan Sedang")
       });
     } else if (type === 'baik') {
-      loadGeoJSON(base + "jalan_provinsi.geojson", {
+      loadGeoJSON(base + "jalanprov23_28mei.geojson", {
         style: () => ({ color: 'green', weight: 4 }),
         onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Jalan Baik")
       });
     } else if (type === 'provinsi') {
-      loadGeoJSON(base + "jalan_provinsi.geojson", {
+      loadGeoJSON(base + "jalanprov23_28mei.geojson", {
         style: () => ({ color: 'magenta', weight: 4 }),
         onEachFeature: (f, layer) => layer.bindPopup(f.properties.nama || "Jalan Provinsi")
       });
