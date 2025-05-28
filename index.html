@@ -82,17 +82,6 @@
   }
 });
     
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        if (currentLayer) map.removeLayer(currentLayer);
-        currentLayer = L.geoJSON(data, options).addTo(map);
-        try {
-          map.fitBounds(currentLayer.getBounds());
-        } catch (e) {
-          console.log("fitBounds gagal:", e);
-        }
-      })
       .catch(err => console.error("Gagal memuat:", url, err));
   }
 
