@@ -65,25 +65,33 @@
   }).addTo(map);
   let currentLayer = null;
 
-  function loadGeoJSON('url, options) {
-    loadGeoJSON('data/jalanprov23_28mei_2.geojson', {
-  style: function(feature) {
-    return { color: 'blue' };
-  },
-  onEachFeature: function(feature, layer) {
-    const props = feature.properties;
-    const popupContent = `
-      <b>Nama Ruas:</b> ${props.nama_ruas || '-'}<br>
-      <b>Desa:</b> ${props.desa || '-'}<br>
-      <b>Kecamatan:</b> ${props.kecamatan || '-'}<br>
-      <b>Kabupaten:</b> ${props.kabupaten || '-'}
-    `;
-    layer.bindPopup(popupContent);
-  }
-});
-    
-      .catch(err => console.error("Gagal memuat:", url, err));
-  }
+const base = "https://raw.githubusercontent.com/junzuw/data_jalan_geojson/main/";
+  const layers = {};
+
+  function toggleLayer(cardEl, type) {
+    if (layers[type]) {
+      map.removeLayer(layers[type]);
+      delete layers[type];
+      cardEl.classList.remove('active');
+      return;
+    }
+
+    cardEl.classList.add('active');
+
+    if (type === 'baik') {
+      fetch(base + "jalan_provinsi.geojson")
+        .then(res => res.json())
+        .then(data => {
+          const layer = L.geoJSON(data, {
+            style: () => ({ color: 'green', weight: 4 }),
+            onEachFeature: (f, layer) => {
+              const nama = f.properties.nama || f.properties.Nama || "Tidak diketahui";
+              const panjang = f.properties.panjang_SK || f.properties.panjang || "-";
+              layer.bindPopup(`<b>${nama}</b><br/>Panjang: ${panjang} Km`);
+            }
+          }).addTo(map);
+          layers[type] = layer;
+        });
 
   function updateMap(type) {
     const base = "https://raw.githubusercontent.com/junzuw/data_jalan_geojson/main/";
