@@ -65,7 +65,23 @@
   }).addTo(map);
   let currentLayer = null;
 
-  function loadGeoJSON(url, options) {
+  function loadGeoJSON('url, options) {
+    loadGeoJSON('data/jalanprov23_28mei_2.geojson', {
+  style: function(feature) {
+    return { color: 'blue' };
+  },
+  onEachFeature: function(feature, layer) {
+    const props = feature.properties;
+    const popupContent = `
+      <b>Nama Ruas:</b> ${props.nama_ruas || '-'}<br>
+      <b>Desa:</b> ${props.desa || '-'}<br>
+      <b>Kecamatan:</b> ${props.kecamatan || '-'}<br>
+      <b>Kabupaten:</b> ${props.kabupaten || '-'}
+    `;
+    layer.bindPopup(popupContent);
+  }
+});
+    
     fetch(url)
       .then(res => res.json())
       .then(data => {
